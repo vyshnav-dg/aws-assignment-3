@@ -56,7 +56,7 @@ Resources:
       Runtime: python3.13
       CodeUri: .
       Handler: launch_ec2.lambda_handler
-      Timeout: 75
+      Timeout: 120
       Policies:
         - Version: "2012-10-17"
           Statement:
