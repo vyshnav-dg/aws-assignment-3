@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Assignment 3
+
+Resources:
+  Assignment3StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: step-function.json
+      DefinitionSubstitutions:
+        DDBTable: !Ref DDBTable
+        CreateAMIFuncARN: !GetAtt CreateAMI.Arn
+        LaunchEC2FuncARN: !GetAtt LaunchEC2.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CreateAMI
+        - LambdaInvokePolicy:
+            FunctionName: !Ref LaunchEC2
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DDBTable
+  DDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "step_function_name"
+          AttributeType: "S"
+        - AttributeName: "step_function_launch_time"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "step_function_name"
+          KeyType: "HASH"
+        - AttributeName: "step_function_launch_time"
+          KeyType: "RANGE"
+      BillingMode: PAY_PER_REQUEST
+      TableName: "Assignment-3-SAM-provisioned"
+  CreateAMI:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Assignment3-CreateAMI-SAM-provisioned
+      Runtime: python3.13
+      CodeUri: .
+      Handler: create_ami.lambda_handler
+      Timeout: 45
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:CreateTags
+                - ec2:CreateImage
+              Resource: "*"
+  LaunchEC2:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Assignment3-LaunchEC2-SAM-provisioned
+      Runtime: python3.13
+      CodeUri: .
+      Handler: launch_ec2.lambda_handler
+      Timeout: 45
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeImages
+                - ec2:CreateTags
+                - ec2:RunInstances
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - ssm:GetParameters
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: "*"
