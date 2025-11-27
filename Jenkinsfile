@@ -16,16 +16,12 @@ pipeline {
         }
         stage("Build the project") {
             steps {
-                dir("code") {
-                    sh "sam build"
-                }
+                sh "sam build"
             }
         }
         stage("Deploy to AWS") {
             steps {
-                dir("code") {
-                    sh "sam deploy --no-confirm-changeset --no-fail-on-empty-changeset"
-                }
+                sh "sam deploy --no-confirm-changeset --no-fail-on-empty-changeset"
             }
         }
     }
